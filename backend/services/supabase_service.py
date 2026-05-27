@@ -3,11 +3,12 @@ from config import SUPABASE_URL, SUPABASE_KEY
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def save_document(filename: str, doc_type: str, chunks_stored: int) -> dict:
+def save_document(doc_id: str, filename: str, doc_type: str, chunks_stored: int) -> dict:
     """
     Saves uploaded document metadata to Supabase.
     """
     response = supabase.table("documents").insert({
+        "id": doc_id,  # store our id in a separate column
         "filename": filename,
         "doc_type": doc_type,
         "chunks_stored": chunks_stored
@@ -38,3 +39,9 @@ def get_documents() -> list:
     """
     response = supabase.table("documents").select("*").order("uploaded_at", desc=True).execute()
     return response.data
+
+def delete_all_documents() -> None:
+    """
+    Deletes all document records from Supabase.
+    """
+    supabase.table("documents").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()

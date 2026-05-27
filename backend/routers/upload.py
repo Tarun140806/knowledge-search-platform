@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from services.rag_service import store_document, get_collection_count, clear_collection
-from services.supabase_service import save_document, get_documents
+from services.supabase_service import save_document, get_documents, delete_all_documents
 import tempfile
 import os
 import uuid
@@ -28,8 +28,8 @@ async def upload_docs(file: UploadFile = File(...)):
     try:
         doc_id = str(uuid.uuid4())
         chunks_stored = store_document(doc_id, tmp_path, file_type)
-        saved = save_document(file.filename, file_type, chunks_stored)
-
+        save_document(doc_id, file.filename, file_type, chunks_stored)
+        
         return {
             "success": True,
             "doc_id": doc_id,
@@ -63,10 +63,11 @@ def list_documents():
 @router.delete("/docs")
 def clear_documents():
     """
-    Clears all documents from ChromaDB.
+    Clears all documents from ChromaDB and Supabase.
     """
     try:
         clear_collection()
+        delete_all_documents()
         return {"success": True, "message": "All documents cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
