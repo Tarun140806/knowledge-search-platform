@@ -17,6 +17,7 @@ cryptography==48.0.0
 deprecation==2.1.0
 distro==1.9.0
 durationpy==0.10
+ecdsa==0.19.2
 fastapi==0.136.3
 filelock==3.29.0
 flatbuffers==25.12.19
@@ -75,9 +76,11 @@ orjson==3.11.9
 ormsgpack==1.12.2
 overrides==7.7.0
 packaging==26.2
+passlib==1.7.4
 postgrest==2.30.0
 propcache==0.5.2
 protobuf==6.33.6
+pyasn1==0.6.3
 pybase64==1.4.3
 pycparser==3.0
 pydantic==2.13.4
@@ -93,6 +96,7 @@ pyproject_hooks==1.2.0
 pyroaring==1.1.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
+python-jose==3.5.0
 python-multipart==0.0.29
 PyYAML==6.0.3
 realtime==2.30.0
@@ -103,6 +107,7 @@ requests-oauthlib==2.0.0
 requests-toolbelt==1.0.0
 rich==14.3.4
 rpds-py==0.30.0
+rsa==4.9.1
 safetensors==0.7.0
 scikit-learn==1.8.0
 scipy==1.17.1
