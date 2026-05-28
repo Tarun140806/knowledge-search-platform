@@ -1,12 +1,9 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 from services.search_service import search
 from services.supabase_service import save_search, get_search_history
+from models.schemas import SearchRequest
 
 router = APIRouter(prefix="/search", tags=["Search"])
-
-class SearchRequest(BaseModel):
-    query: str
 
 @router.post("/")
 async def search_docs(request: SearchRequest):

@@ -1,19 +1,9 @@
-import chromadb
+from database.chroma import chroma_client, embedding_model, get_collection
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 
-# Initialize ChromaDB
-chroma_client = chromadb.PersistentClient(path="./chroma_db")
-
-# Initialize embedding model
-embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
-
-# Get or create collection
-collection = chroma_client.get_or_create_collection(
-    name="engineering_docs",
-    metadata={"hnsw:space": "cosine"}
-)
+collection = get_collection();
 
 def load_and_chunk_document(file_path: str, file_type: str) -> list:
     """

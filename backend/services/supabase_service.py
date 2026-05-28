@@ -1,14 +1,11 @@
-from supabase import create_client
-from config import SUPABASE_URL, SUPABASE_KEY
-
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+from database.supabase import supabase
 
 def save_document(doc_id: str, filename: str, doc_type: str, chunks_stored: int) -> dict:
     """
     Saves uploaded document metadata to Supabase.
     """
     response = supabase.table("documents").insert({
-        "id": doc_id,  # store our id in a separate column
+        "id": doc_id, 
         "filename": filename,
         "doc_type": doc_type,
         "chunks_stored": chunks_stored
