@@ -91,5 +91,11 @@ def save_chat_message(session_id: str, role: str, content: str) -> dict:
 def get_chat_messages(session_id: str) -> list:
     response = supabase.table("chat_messages").select("*").eq(
         "session_id", session_id
-    ).order("created_at", asc=True).execute()
+    ).order("created_at", desc=False).execute()
+    return response.data
+
+def get_user_sessions(user_id: str) -> list:
+    response = supabase.table("chat_sessions").select("*").eq(
+        "user_id", user_id
+    ).order("created_at", desc=True).execute()
     return response.data
