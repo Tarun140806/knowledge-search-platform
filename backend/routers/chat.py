@@ -14,20 +14,27 @@ async def chat_endpoint(
     Main chat endpoint — continues or starts a conversation.
     """
     try:
-        user_id = user["user_id"]
+        # Validate message
+        if not request.message or not request.message.strip():
+            raise HTTPException(status_code=400, detail="Message cannot be empty")
+        
+        if len(request.message) > 2000:
+            raise HTTPException(status_code=400, detail="Message too long — max 2000 characters")
 
-        # If no session_id provided, create a new session
+        user_id = user["user_id"]
         session_id = request.session_id
         if not session_id:
             session_id = start_session(user_id)
 
-        result = chat(session_id, request.message, user_id)
+        result = chat(session_id, request.message.strip(), user_id)
 
         return {
             "success": True,
             **result
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

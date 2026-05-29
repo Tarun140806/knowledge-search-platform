@@ -9,36 +9,46 @@ import uuid
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
 @router.post("/docs")
-async def upload_docs(file: UploadFile = File(...), user=Depends(get_current_user)):
+async def upload_docs(file: UploadFile = File(...), user: dict = Depends(get_current_user)):
     if not file.filename.endswith(('.pdf', '.txt')):
         raise HTTPException(status_code=400, detail="Only PDF and TXT files are supported")
 
+    content = await file.read()
+    
+    # 10MB limit
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large — max 10MB")
+
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="File is empty")
+
     file_type = "pdf" if file.filename.endswith('.pdf') else "txt"
-    user_id = user["user_id"]
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_type}") as tmp:
-        content = await file.read()
         tmp.write(content)
         tmp_path = tmp.name
 
     try:
         doc_id = str(uuid.uuid4())
-        chunks_stored = store_document(doc_id, tmp_path, file_type, user_id=user_id)
-        save_document(doc_id, file.filename, file_type, chunks_stored, user_id=user_id)
+        chunks_stored = store_document(doc_id, tmp_path, file_type, user_id=user["user_id"])
+        save_document(doc_id, file.filename, file_type, chunks_stored, user_id=user["user_id"])
 
         return {
             "success": True,
             "doc_id": doc_id,
             "filename": file.filename,
             "chunks_stored": chunks_stored,
-            "total_chunks_in_db": get_collection_count(user_id=user_id),
+            "total_chunks_in_db": get_collection_count(user_id=user["user_id"]),
             "message": f"Successfully processed {chunks_stored} chunks from {file.filename}"
         }
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
     finally:
         os.unlink(tmp_path)
-
 @router.get("/docs")
 def list_documents(user=Depends(get_current_user)):
     try:

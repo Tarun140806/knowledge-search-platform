@@ -9,17 +9,18 @@ router = APIRouter(prefix="/search", tags=["Search"])
 @router.post("/")
 async def search_docs(request: SearchRequest, user=Depends(get_current_user)):
     try:
-        if not request.query.strip():
+        if not request.query or not request.query.strip():
             raise HTTPException(status_code=400, detail="Query cannot be empty")
 
-        user_id = user["user_id"]
-        result = search(request.query, user_id=user_id)
+        if len(request.query) > 1000:
+            raise HTTPException(status_code=400, detail="Query too long — max 1000 characters")
 
+        result = search(request.query.strip(), user_id=user["user_id"])
         save_search(
             query=request.query,
             answer=result["answer"],
             sources=result["sources"],
-            user_id=user_id
+            user_id=user["user_id"]
         )
 
         return {
@@ -29,6 +30,9 @@ async def search_docs(request: SearchRequest, user=Depends(get_current_user)):
             "sources": result["sources"],
             "context_used": result["context_used"]
         }
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
