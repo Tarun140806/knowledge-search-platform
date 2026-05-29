@@ -1,12 +1,5 @@
 from pydantic import BaseModel
-
-class SearchRequest(BaseModel):
-    query: str
-    session_id: str = None  # for chat
-
-class ChatRequest(BaseModel):
-    message: str
-    session_id: str
+from typing import Optional
 
 class RegisterRequest(BaseModel):
     email: str
@@ -15,3 +8,10 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class SearchRequest(BaseModel):
+    query: str
+
+class ChatRequest(BaseModel):
+    message: str
+    session_id: Optional[str] = None

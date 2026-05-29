@@ -1,6 +1,7 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from services.rag_service import store_document, get_collection_count, clear_collection
 from services.supabase_service import save_document, get_documents, delete_all_documents
+from routers.auth import get_current_user
 import tempfile
 import os
 import uuid
@@ -8,17 +9,12 @@ import uuid
 router = APIRouter(prefix="/upload", tags=["Upload"])
 
 @router.post("/docs")
-async def upload_docs(file: UploadFile = File(...)):
-    """
-    Accepts PDF or TXT file, chunks and stores in ChromaDB.
-    """
+async def upload_docs(file: UploadFile = File(...), user=Depends(get_current_user)):
     if not file.filename.endswith(('.pdf', '.txt')):
-        raise HTTPException(
-            status_code=400,
-            detail="Only PDF and TXT files are supported"
-        )
+        raise HTTPException(status_code=400, detail="Only PDF and TXT files are supported")
 
     file_type = "pdf" if file.filename.endswith('.pdf') else "txt"
+    user_id = user["user_id"]
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_type}") as tmp:
         content = await file.read()
@@ -27,47 +23,41 @@ async def upload_docs(file: UploadFile = File(...)):
 
     try:
         doc_id = str(uuid.uuid4())
-        chunks_stored = store_document(doc_id, tmp_path, file_type)
-        save_document(doc_id, file.filename, file_type, chunks_stored)
-        
+        chunks_stored = store_document(doc_id, tmp_path, file_type, user_id=user_id)
+        save_document(doc_id, file.filename, file_type, chunks_stored, user_id=user_id)
+
         return {
             "success": True,
             "doc_id": doc_id,
             "filename": file.filename,
             "chunks_stored": chunks_stored,
-            "total_chunks_in_db": get_collection_count(),
+            "total_chunks_in_db": get_collection_count(user_id=user_id),
             "message": f"Successfully processed {chunks_stored} chunks from {file.filename}"
         }
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
     finally:
         os.unlink(tmp_path)
 
 @router.get("/docs")
-def list_documents():
-    """
-    Returns all uploaded documents.
-    """
+def list_documents(user=Depends(get_current_user)):
     try:
-        docs = get_documents()
+        user_id = user["user_id"]
+        docs = get_documents(user_id=user_id)
         return {
             "success": True,
-            "total_chunks_in_db": get_collection_count(),
+            "total_chunks_in_db": get_collection_count(user_id=user_id),
             "documents": docs
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.delete("/docs")
-def clear_documents():
-    """
-    Clears all documents from ChromaDB and Supabase.
-    """
+def clear_documents(user=Depends(get_current_user)):
     try:
-        clear_collection()
-        delete_all_documents()
+        user_id = user["user_id"]
+        clear_collection(user_id=user_id)
+        delete_all_documents(user_id=user_id)
         return {"success": True, "message": "All documents cleared"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

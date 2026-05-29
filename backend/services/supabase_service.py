@@ -53,3 +53,43 @@ def delete_all_documents(user_id: str = None) -> None:
     else:
         query = query.neq("id", "00000000-0000-0000-0000-000000000000")
     query.execute()
+
+def create_user(email: str, hashed_password: str) -> dict:
+    """
+    Creates a new user in Supabase.
+    """
+    response = supabase.table("users").insert({
+        "email": email,
+        "hashed_password": hashed_password
+    }).execute()
+    return response.data[0]
+
+def get_user_by_email(email: str) -> dict:
+    """
+    Fetches a user by email.
+    Returns None if not found.
+    """
+    response = supabase.table("users").select("*").eq("email", email).execute()
+    if response.data:
+        return response.data[0]
+    return None
+
+def create_chat_session(user_id: str) -> dict:
+    response = supabase.table("chat_sessions").insert({
+        "user_id": user_id
+    }).execute()
+    return response.data[0]
+
+def save_chat_message(session_id: str, role: str, content: str) -> dict:
+    response = supabase.table("chat_messages").insert({
+        "session_id": session_id,
+        "role": role,
+        "content": content
+    }).execute()
+    return response.data[0]
+
+def get_chat_messages(session_id: str) -> list:
+    response = supabase.table("chat_messages").select("*").eq(
+        "session_id", session_id
+    ).order("created_at", asc=True).execute()
+    return response.data
