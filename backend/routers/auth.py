@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
-from models.schemas import RegisterRequest, LoginRequest
+from models.schemas import RegisterRequest, LoginRequest, RegisterResponse, LoginResponse
 from services.auth_service import hash_password, verify_password, create_access_token, decode_token
 from services.supabase_service import create_user, get_user_by_email
 
@@ -8,7 +8,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
-@router.post("/register")
+@router.post("/register", response_model=RegisterResponse)
 def register(request: RegisterRequest):
     """
     Creates a new user account.
@@ -29,7 +29,7 @@ def register(request: RegisterRequest):
         "email": user["email"]
     }
 
-@router.post("/login")
+@router.post("/login", response_model=LoginResponse)
 def login(request: LoginRequest):
     """
     Logs in a user and returns a JWT token.

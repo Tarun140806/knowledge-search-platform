@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
-from models.schemas import ChatRequest
+from models.schemas import ChatRequest, ChatResponse, SessionsResponse, ChatHistoryResponse
 from services.chat_service import chat, start_session
 from routers.auth import get_current_user
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
-@router.post("/")
+@router.post("/", response_model=ChatResponse)
 async def chat_endpoint(
     request: ChatRequest,
     user: dict = Depends(get_current_user)
@@ -38,7 +38,7 @@ async def chat_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/sessions")
+@router.get("/sessions", response_model=SessionsResponse)
 def get_sessions(user: dict = Depends(get_current_user)):
     """
     Returns all chat sessions for the current user.
@@ -50,7 +50,7 @@ def get_sessions(user: dict = Depends(get_current_user)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/history/{session_id}")
+@router.get("/history/{session_id}", response_model=ChatHistoryResponse)
 def get_history(session_id: str, user: dict = Depends(get_current_user)):
     """
     Returns full message history for a specific session.

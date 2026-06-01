@@ -49,6 +49,7 @@ async def upload_docs(file: UploadFile = File(...), user: dict = Depends(get_cur
 
     finally:
         os.unlink(tmp_path)
+
 @router.get("/docs")
 def list_documents(user=Depends(get_current_user)):
     try:
