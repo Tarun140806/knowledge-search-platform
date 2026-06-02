@@ -16,26 +16,26 @@ def start_session(user_id: str) -> str:
     session = create_chat_session(user_id)
     return session["id"]
 
-def chat(session_id: str, user_message: str, user_id: str) -> dict:
+def chat(session_id: str, user_message: str, company_id: str) -> dict:
     """
-    Takes a message, retrieves relevant context,
+    Takes a message, retrieves relevant context from company docs,
     builds conversation history and returns AI response.
     """
-    # Step 1 — Save user message to DB
+    # Step 1 — Save user message
     save_chat_message(session_id, "user", user_message)
 
-    # Step 2 — Retrieve relevant context from ChromaDB
-    context_chunks = retrieve_relevant_context(user_message, user_id=user_id)
+    # Step 2 — Retrieve from company collection
+    context_chunks = retrieve_relevant_context(user_message, company_id=company_id)
     context = "\n\n".join(context_chunks) if context_chunks else ""
 
-    # Step 3 — Fetch full conversation history
+    # Step 3 — Fetch conversation history
     history = get_chat_messages(session_id)
 
-    # Step 4 — Build messages array for Groq
+    # Step 4 — Build messages for Groq
     messages = [
         {
             "role": "system",
-            "content": f"""You are an intelligent engineering knowledge assistant for Indium Software.
+            "content": f"""You are an intelligent engineering knowledge assistant for a software development company.
 You help engineers find information from internal engineering documents.
 Use ONLY the context provided to answer questions.
 If the answer is not in the context, say "I couldn't find relevant information in the uploaded documents."
@@ -63,7 +63,7 @@ Context from engineering documents:
 
     answer = response.choices[0].message.content.strip()
 
-    # Step 6 — Save assistant response to DB
+    # Step 6 — Save assistant response
     save_chat_message(session_id, "assistant", answer)
 
     return {

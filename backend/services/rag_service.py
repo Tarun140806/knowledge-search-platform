@@ -23,9 +23,8 @@ def load_and_chunk_document(file_path: str, file_type: str) -> list:
     chunks = splitter.split_documents(documents)
     return chunks
 
-def store_document(doc_id: str, file_path: str, file_type: str, user_id: str = None) -> int:
-    # Use user-specific collection if user_id provided
-    col = get_collection(f"user_{user_id}_docs") if user_id else collection
+def store_document(doc_id: str, file_path: str, file_type: str, company_id: str = None) -> int:
+    col = get_collection(f"company_{company_id}_docs") if company_id else collection
 
     chunks = load_and_chunk_document(file_path, file_type)
     texts = [chunk.page_content for chunk in chunks]
@@ -42,8 +41,8 @@ def store_document(doc_id: str, file_path: str, file_type: str, user_id: str = N
 
     return len(texts)
 
-def retrieve_relevant_context(query: str, n_results: int = 5, user_id: str = None) -> list:
-    col = get_collection(f"user_{user_id}_docs") if user_id else collection
+def retrieve_relevant_context(query: str, n_results: int = 5, company_id: str = None) -> list:
+    col = get_collection(f"company_{company_id}_docs") if company_id else collection
 
     if col.count() == 0:
         return []
@@ -60,13 +59,13 @@ def retrieve_relevant_context(query: str, n_results: int = 5, user_id: str = Non
 
     return results["documents"][0]
 
-def get_collection_count(user_id: str = None) -> int:
-    col = get_collection(f"user_{user_id}_docs") if user_id else collection
+def get_collection_count(company_id: str = None) -> int:
+    col = get_collection(f"company_{company_id}_docs") if company_id else collection
     return col.count()
 
-def clear_collection(user_id: str = None):
-    col_name = f"user_{user_id}_docs" if user_id else "engineering_docs"
+def clear_collection(company_id: str = None):
+    col_name = f"company_{company_id}_docs" if company_id else "engineering_docs"
     global collection
     chroma_client.delete_collection(col_name)
-    if not user_id:
+    if not company_id:
         collection = get_collection()

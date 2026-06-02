@@ -1,6 +1,60 @@
 from database.supabase import supabase
+import random
+import string
 
-def save_document(doc_id: str, filename: str, doc_type: str, chunks_stored: int, user_id: str = None) -> dict:
+def generate_invite_code() -> str:
+    """
+    Generates a random 8 character invite code.
+    """
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+def create_company(name: str) -> dict:
+    """
+    Creates a new company with a unique invite code.
+    """
+    invite_code = generate_invite_code()
+    response = supabase.table("companies").insert({
+        "name": name,
+        "invite_code": invite_code
+    }).execute()
+    return response.data[0]
+
+def get_company_by_invite_code(invite_code: str) -> dict:
+    """
+    Fetches a company by invite code.
+    Returns None if not found.
+    """
+    response = supabase.table("companies").select("*").eq(
+        "invite_code", invite_code
+    ).execute()
+    if response.data:
+        return response.data[0]
+    return None
+
+def get_company_by_id(company_id: str) -> dict:
+    """
+    Fetches a company by ID.
+    """
+    response = supabase.table("companies").select("*").eq(
+        "id", company_id
+    ).execute()
+    if response.data:
+        return response.data[0]
+    return None
+
+def create_user(email: str, hashed_password: str, company_id: str = None, role: str = "user") -> dict:
+    """
+    Creates a new user — updated to include company_id and role.
+    """
+    response = supabase.table("users").insert({
+        "email": email,
+        "hashed_password": hashed_password,
+        "company_id": company_id,
+        "role": role
+    }).execute()
+    return response.data[0]
+
+def save_document(doc_id: str, filename: str, doc_type: str, chunks_stored: int, company_id: str = None) -> dict:
     """
     Saves uploaded document metadata to Supabase.
     """
@@ -9,11 +63,11 @@ def save_document(doc_id: str, filename: str, doc_type: str, chunks_stored: int,
         "filename": filename,
         "doc_type": doc_type,
         "chunks_stored": chunks_stored,
-        "user_id": user_id
+        "company_id": company_id
     }).execute()
     return response.data[0]
 
-def save_search(query: str, answer: str, sources: list, user_id: str = None) -> dict:
+def save_search(query: str, answer: str, sources: list, company_id: str = None) -> dict:
     """
     Saves search query and answer to Supabase.
     """
@@ -21,48 +75,38 @@ def save_search(query: str, answer: str, sources: list, user_id: str = None) -> 
         "query": query,
         "answer": answer,
         "sources": sources,
-        "user_id": user_id
+        "company_id": company_id
     }).execute()
     return response.data[0]
 
-def get_search_history(user_id: str = None) -> list:
+def get_search_history(company_id: str = None) -> list:
     """
     Fetches past searches — filtered by user if user_id provided.
     """
     query = supabase.table("search_history").select("*")
-    if user_id:
-        query = query.eq("user_id", user_id)
+    if company_id:
+        query = query.eq("company_id", company_id)
     return query.order("created_at", desc=True).execute().data
 
-def get_documents(user_id: str = None) -> list:
+def get_documents(company_id: str = None) -> list:
     """
     Fetches uploaded documents — filtered by user if user_id provided.
     """
     query = supabase.table("documents").select("*")
-    if user_id:
-        query = query.eq("user_id", user_id)
+    if company_id:
+        query = query.eq("company_id", company_id)
     return query.order("uploaded_at", desc=True).execute().data
 
-def delete_all_documents(user_id: str = None) -> None:
+def delete_all_documents(company_id: str = None) -> None:
     """
     Deletes all documents — filtered by user if user_id provided.
     """
     query = supabase.table("documents").delete()
-    if user_id:
-        query = query.eq("user_id", user_id)
+    if company_id:
+        query = query.eq("company_id", company_id)
     else:
         query = query.neq("id", "00000000-0000-0000-0000-000000000000")
     query.execute()
-
-def create_user(email: str, hashed_password: str) -> dict:
-    """
-    Creates a new user in Supabase.
-    """
-    response = supabase.table("users").insert({
-        "email": email,
-        "hashed_password": hashed_password
-    }).execute()
-    return response.data[0]
 
 def get_user_by_email(email: str) -> dict:
     """

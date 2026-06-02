@@ -2,11 +2,24 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
 
-# ─── Request Models ───
+# ─── Company Models ───
+class CreateCompanyRequest(BaseModel):
+    company_name: str
 
+class CompanyResponse(BaseModel):
+    success: bool
+    company_id: str
+    company_name: str
+    invite_code: str
+    message: str
+
+# ─── Request Models ───
 class RegisterRequest(BaseModel):
     email: str
     password: str
+    company_name: Optional[str] = None  # for admin creating new company
+    invite_code: Optional[str] = None   # for employee joining existing company
+
 
 class LoginRequest(BaseModel):
     email: str
@@ -87,3 +100,4 @@ class SessionItem(BaseModel):
 class SessionsResponse(BaseModel):
     success: bool
     sessions: List[SessionItem]
+

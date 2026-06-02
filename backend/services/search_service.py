@@ -4,8 +4,8 @@ from services.rag_service import retrieve_relevant_context
 
 client = Groq(api_key=GROQ_API_KEY)
 
-def search(query: str, user_id: str = None) -> dict:
-    relevant_chunks = retrieve_relevant_context(query, user_id=user_id)
+def search(query: str, company_id: str = None) -> dict:
+    relevant_chunks = retrieve_relevant_context(query, company_id=company_id)
 
     if not relevant_chunks:
         return {
@@ -16,7 +16,7 @@ def search(query: str, user_id: str = None) -> dict:
 
     context = "\n\n".join(relevant_chunks)
 
-    prompt = f"""You are an intelligent engineering knowledge assistant for software company.
+    prompt = f"""You are an intelligent engineering knowledge assistant for a software development company.
 Use ONLY the context provided below to answer the question.
 If the answer is not in the context, say "I couldn't find relevant information in the uploaded documents."
 Do not make up information.
